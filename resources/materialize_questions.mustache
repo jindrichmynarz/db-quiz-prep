@@ -1,0 +1,81 @@
+{{!
+@param IRI        class
+@param IRI        source-graph
+@param IRI        target-graph
+@param Array<IRI> surface-forms
+@param int        limit
+@param int        offset
+}}
+
+PREFIX dbo:     <http://dbpedia.org/ontology/>
+PREFIX foaf:    <http://xmlns.com/foaf/0.1/>
+PREFIX rdfs:    <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX skos:    <http://www.w3.org/2004/02/skos/core#>
+
+INSERT {
+  GRAPH <{{target-graph}}> {
+    ?subject a <{{class}}> ;
+      rdfs:label ?label ;
+      dbo:abstract ?description ;
+      skos:altLabel ?surfaceForm ;
+      dbo:wikiPageInDegree ?indegree .
+  }
+}
+WHERE {
+  {
+    SELECT ?subject
+           ?indegree
+           (STR(SAMPLE(?_label)) AS ?label)
+           (STR(SAMPLE(?_description)) AS ?description) 
+    WHERE {
+      {
+        SELECT ?subject (COUNT(?link) AS ?indegree)
+        WHERE {
+          {
+            SELECT ?subject
+            WHERE {
+              {
+                SELECT DISTINCT ?subject
+                WHERE {
+                  GRAPH <{{source-graph}}> {
+                    ?subject a <{{class}}> .
+                  }
+                }
+                ORDER BY ASC(?subject)
+              }
+            }
+            LIMIT {{limit}}
+            OFFSET {{offset}}
+          }
+          OPTIONAL {
+            GRAPH <{{source-graph}}> {
+              ?link dbo:wikiPageWikiLink ?subject .
+            }
+          }
+        }
+        GROUP BY ?subject
+      }
+      GRAPH <{{source-graph}}> {
+        ?subject rdfs:label ?_label ;
+          dbo:abstract ?_description .
+        FILTER (!REGEX(?_label, "^(\\p{Lu}\\.?)+$") 
+                &&
+                (STRLEN(?_description) > 140)
+                &&
+                (STRLEN(?_label) < 30))
+      }
+    }
+    GROUP BY ?subject ?indegree
+  }
+  OPTIONAL {
+    GRAPH <{{source-graph}}> {
+      VALUES ?surfaceFormProperty {
+        {{#surface-forms}}
+        <{{.}}>
+        {{/surface-forms}}
+      }
+      ?subject ?surfaceFormProperty ?_surfaceForm .
+      BIND (STR(?_surfaceForm) AS ?surfaceForm)
+    }
+  }
+}

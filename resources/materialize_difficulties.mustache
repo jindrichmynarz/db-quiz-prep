@@ -1,0 +1,46 @@
+{{!
+@param IRI   class
+@param IRI   target-graph
+@param float maximum-indegree
+@param float minimum-indegree
+@param int   limit
+@param int   offset
+}}
+
+PREFIX dbo: <http://dbpedia.org/ontology/>
+PREFIX dbq: <http://mynarz.net/db-quiz/ontology/>
+
+INSERT {
+  GRAPH <{{target-graph}}> {
+    ?subject dbq:difficulty [
+      dbq:forClass <{{class}}> ;
+      dbq:difficultyLevel ?difficulty
+    ] .
+  }
+}
+WHERE {
+  {
+    SELECT ?subject
+           (IF(?indegree > {{minimum-indegree}} && ?indegree < {{maximum-indegree}}, dbq:normal,
+            IF(?indegree > {{maximum-indegree}}, dbq:easy, dbq:hard)) AS ?difficulty)
+    WHERE {
+      {
+        SELECT ?subject
+        WHERE {
+          {
+            SELECT ?subject 
+            GRAPH <{{target-graph}}> {
+              ?subject a <{{class}}> . 
+            }
+            ORDER BY ?subject
+          }
+        }
+        LIMIT {{limit}}
+        OFFSET {{offset}}
+      }
+      GRAPH <{{target-graph}}> {
+        ?subject dbo:wikiPageInDegree ?indegree .
+      }
+    }
+  }
+}

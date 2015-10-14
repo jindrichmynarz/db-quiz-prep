@@ -1,0 +1,25 @@
+{{!
+@param IRI class
+@param IRI target-graph
+@param int limit
+@param int offset
+}}
+
+PREFIX dbo:     <http://dbpedia.org/ontology/>
+
+SELECT ?frequency ?indegree
+WHERE {
+  {
+    SELECT ?indegree (COUNT(DISTINCT ?subject) AS ?frequency)
+    WHERE {
+      GRAPH <{{target-graph}}> {
+        ?subject a <{{class}}> ;
+          dbo:wikiPageInDegree ?indegree .
+      }
+    }
+    GROUP BY ?indegree
+    ORDER BY ?indegree
+  }
+}
+LIMIT {{limit}}
+OFFSET {{offset}}
