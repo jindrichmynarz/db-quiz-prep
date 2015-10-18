@@ -65,8 +65,9 @@
 (def ^:private cli-options
   [["-c" "--config CONFIG" "Path to configuration file in EDN"
     :parse-fn #(edn/read-string (slurp %))]
-   ["-t" "--task TASK" "Task to execute. Either 'questions' or 'difficulties'."
-    :validate [#{"questions" "difficulties"} "Task to execute must be either 'questions' or 'difficulties'."]]
+   ["-t" "--task TASK" "Task to execute. Either 'questions', 'difficulties' or 'delete-difficulties'."
+    :validate [#{"questions" "difficulties" "delete-difficulties"}
+               "Task to execute must be either 'questions', 'difficulties' or 'delete-difficulties'."]]
    ["-h" "--help" "Display help message"]])
 
 ; ----- Public functions -----
