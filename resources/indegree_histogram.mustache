@@ -1,8 +1,8 @@
 {{!
-@param IRI class
-@param IRI target-graph
-@param int limit
-@param int offset
+@param Map<IRI, IRI> selector
+@param IRI           target-graph
+@param int           limit
+@param int           offset
 }}
 
 PREFIX dbo:     <http://dbpedia.org/ontology/>
@@ -13,7 +13,7 @@ WHERE {
     SELECT ?indegree (COUNT(DISTINCT ?subject) AS ?frequency)
     WHERE {
       GRAPH <{{target-graph}}> {
-        ?subject a <{{class}}> ;
+        ?subject <{{selector.p}}> <{{selector.o}}> ;
           dbo:wikiPageInDegree ?indegree .
       }
     }

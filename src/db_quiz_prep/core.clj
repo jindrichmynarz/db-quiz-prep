@@ -19,7 +19,8 @@
                      :username s/Str
                      :password s/Str
                      :page-size positive-number}
-   :data {:class sc/URI
+   :data {:selector {:p sc/URI
+                     :o sc/Str}
           :surface-forms [sc/URI]
           :source-graph sc/URI
           :target-graph sc/URI}

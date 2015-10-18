@@ -95,7 +95,7 @@
                                             :minimum-indegree minimum-indegree})))
 
 (defn delete-difficulties
-  "Delete materialized difficulties for given class.
+  "Delete materialized difficulties for given selector.
   Used for testing."
   [{:keys [data params]
     :as config}]

@@ -1,10 +1,10 @@
 {{!
-@param IRI   class
-@param IRI   target-graph
-@param float maximum-indegree
-@param float minimum-indegree
-@param int   limit
-@param int   offset
+@param Map<IRI,IRI> selector
+@param IRI          target-graph
+@param float        maximum-indegree
+@param float        minimum-indegree
+@param int          limit
+@param int          offset
 }}
 
 PREFIX dbo: <http://dbpedia.org/ontology/>
@@ -13,7 +13,7 @@ PREFIX dbq: <http://mynarz.net/db-quiz/ontology/>
 INSERT {
   GRAPH <{{target-graph}}> {
     ?subject dbq:difficulty [
-      dbq:forClass <{{class}}> ;
+      dbq:forSelector [ <{{selector.p}}> <{{selector.o}}> ] ;
       dbq:difficultyLevel ?difficulty
     ] .
   }
@@ -31,7 +31,7 @@ WHERE {
             SELECT ?subject
             WHERE {
               GRAPH <{{target-graph}}> {
-                ?subject a <{{class}}> . 
+                ?subject <{{selector.p}}> <{{selector.o}}> . 
               }
             }
             ORDER BY ?subject

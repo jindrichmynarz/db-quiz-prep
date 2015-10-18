@@ -1,10 +1,10 @@
 {{!
-@param IRI        class
-@param IRI        source-graph
-@param IRI        target-graph
-@param Array<IRI> surface-forms
-@param int        limit
-@param int        offset
+@param Map<IRI, IRI> selector
+@param IRI           source-graph
+@param IRI           target-graph
+@param Array<IRI>    surface-forms
+@param int           limit
+@param int           offset
 }}
 
 PREFIX dbo:     <http://dbpedia.org/ontology/>
@@ -14,7 +14,7 @@ PREFIX skos:    <http://www.w3.org/2004/02/skos/core#>
 
 INSERT {
   GRAPH <{{target-graph}}> {
-    ?subject a <{{class}}> ;
+    ?subject <{{selector.p}}> <{{selector.o}}> ;
       rdfs:label ?label ;
       dbo:abstract ?description ;
       skos:altLabel ?surfaceForm ;
@@ -38,7 +38,7 @@ WHERE {
                 SELECT DISTINCT ?subject
                 WHERE {
                   GRAPH <{{source-graph}}> {
-                    ?subject a <{{class}}> .
+                    ?subject <{{selector.p}}> <{{selector.o}}> .
                   }
                 }
                 ORDER BY ASC(?subject)
