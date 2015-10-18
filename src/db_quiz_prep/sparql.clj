@@ -43,17 +43,19 @@
             (println body)
             (throw+)))))
 
-(defn- execute-query
+; ----- Public functions -----
+
+(defn execute-query
   [config sparql-string]
   (execute-sparql config :GET sparql-string))
 
-(defn- execute-update
+(defn execute-update
   "Execute a SPARQL Update operation."
   [config sparql-string]
   (execute-sparql config :POST sparql-string))
 
-(defn- select
-  "Execute SPARQL SELECT query. 
+(defn select
+  "Execute SPARQL SELECT query.
   Returns empty sequence when query has no results."
   [config sparql-string]
   (let [results (xml->zipper (execute-query config sparql-string))
@@ -62,29 +64,31 @@
         get-bindings (comp (partial zipmap sparql-variables) #(zip-xml/xml-> % :binding zip-xml/text))]
     (map get-bindings sparql-results)))
 
-; ----- Public functions -----
-
 (defn execute-unlimited-select-query
   "Lazily stream pages of SPARQL SELECT query results
   by executing paged query from `sparql-template`"
-  [{:keys [page-size params start-from] :as config} sparql-template]
+  [{:keys [page-size params start-from] :as config} sparql-template & {:keys [data]}]
   (letfn [(paged-select [offset]
             (println (format "Executing SELECT query with offset %s..." offset))
             (select config (render-string sparql-template
                                           (merge {:limit page-size
-                                                  :offset offset} params))))] 
+                                                  :offset offset}
+                                                 params
+                                                 data))))]
     (->> (iterate (partial + page-size) 0)
          (map paged-select)
          (take-while seq)
          lazy-cat')))
 
 (defn execute-unlimited-update
-  [{:keys [page-size params start-from] :as config} sparql-template]
+  [{:keys [page-size params start-from] :as config} sparql-template & {:keys [data]}]
   (let [message-regex (re-pattern #"(\d+)( \(or less\))? triples")
         update-fn (fn [offset]
                     (let [sparql (render-string sparql-template
                                                 (merge {:limit page-size
-                                                        :offset offset} params))]
+                                                        :offset offset}
+                                                       params
+                                                       data))]
                       (println (format "Executing update operation with offset %s..." offset))
                       (execute-update config sparql)))
         triples-changed (comp (fn [number-like]
