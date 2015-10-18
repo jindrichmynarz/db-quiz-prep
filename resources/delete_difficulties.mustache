@@ -1,0 +1,18 @@
+{{!
+@param IRI   class
+@param IRI   target-graph
+}}
+
+PREFIX dbo: <http://dbpedia.org/ontology/>
+PREFIX dbq: <http://mynarz.net/db-quiz/ontology/>
+
+WITH <{{target-graph}}>
+DELETE {
+  ?subject dbq:difficulty ?difficulty .
+  ?difficulty ?p ?o .
+}
+WHERE {
+  ?subject a <{{class}}> ;
+    dbq:difficulty ?difficulty .
+  ?difficulty ?p ?o .
+}
