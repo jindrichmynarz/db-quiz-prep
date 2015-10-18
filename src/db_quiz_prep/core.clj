@@ -12,6 +12,8 @@
 
 (def ^:private positive-number (s/both s/Int (s/pred pos? 'pos?)))
 
+(def ^:private degree (s/both positive-number (s/pred (partial >= 180) 'degree?)))
+
 (def ^:private Config
   {:sparql-endpoint {:url sc/URI
                      :username s/Str
@@ -21,6 +23,8 @@
           :surface-forms [sc/URI]
           :source-graph sc/URI
           :target-graph sc/URI}
+   :split-angles {:easy degree
+                  :normal degree}
    (s/optional-key :start-from) positive-number})
 
 ; ----- Private functions -----
@@ -42,7 +46,7 @@
 (defn- usage
   "Wrap usage `summary` in a description of the program."
   [summary]
-  (join-lines ["Execute unlimited SPARQL!"
+  (join-lines ["DB-quiz data pre-processing tool"
                "Options:\n"
                summary]))
 
@@ -61,16 +65,18 @@
 (def ^:private cli-options
   [["-c" "--config CONFIG" "Path to configuration file in EDN"
     :parse-fn #(edn/read-string (slurp %))]
+   ["-t" "--task TASK" "Task to execute. Either 'questions' or 'difficulties'."
+    :validate [#{"questions" "difficulties"} "Task to execute must be either 'questions' or 'difficulties'."]]
    ["-h" "--help" "Display help message"]])
 
 ; ----- Public functions -----
 
 (defn -main
   [& args]
-  (let [{{:keys [config help]} :options
+  (let [{{:keys [config help task]} :options
          :keys [errors summary]} (parse-opts args cli-options)]
     (cond help (exit 0 (usage summary)) 
           errors (exit 1 (error-msg errors))
           :else (if-let [error (validate-config config)]
                     (exit 1 error)
-                    (prepare/execute config)))))
+                    (prepare/execute config task)))))
