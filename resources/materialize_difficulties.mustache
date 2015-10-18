@@ -28,9 +28,11 @@ WHERE {
         SELECT ?subject
         WHERE {
           {
-            SELECT ?subject 
-            GRAPH <{{target-graph}}> {
-              ?subject a <{{class}}> . 
+            SELECT ?subject
+            WHERE {
+              GRAPH <{{target-graph}}> {
+                ?subject a <{{class}}> . 
+              }
             }
             ORDER BY ?subject
           }
