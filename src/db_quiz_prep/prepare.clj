@@ -99,9 +99,10 @@
   Used for testing."
   [{:keys [data params]
     :as config}]
-  (let [update-template (slurp (io/resource "delete_difficulties.mustache"))
-        update-string (render-string update-template (merge params data))]
-    (sparql/execute-update config update-string)))
+  (let [update-template (slurp (io/resource "delete_difficulties.mustache"))]
+    (sparql/execute-unlimited-update config
+                                     update-template
+                                     :data (merge params data))))
 
 (defn materialize-questions
   "Materialize questions based on provided configuration"

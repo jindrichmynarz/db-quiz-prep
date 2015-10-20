@@ -1,18 +1,42 @@
 {{!
 @param Map<IRI, IRI> selector
 @param IRI           target-graph
+@param int           limit
+@param int           offset
 }}
 
 PREFIX dbo: <http://dbpedia.org/ontology/>
 PREFIX dbq: <http://mynarz.net/db-quiz/ontology/>
 
-WITH <{{target-graph}}>
 DELETE {
-  ?subject dbq:difficulty ?difficulty .
-  ?difficulty ?p ?o .
+  GRAPH <{{target-graph}}> {
+    ?subject dbq:difficulty ?difficulty .
+    ?difficulty ?p1 ?o1 .
+    ?o1 ?p2 ?o2 .
+  }
 }
 WHERE {
-  ?subject <{{selector.p}}> <{{selector.o}}> ;
-    dbq:difficulty ?difficulty .
-  ?difficulty ?p ?o .
+  {
+    SELECT ?subject
+    WHERE {
+      {
+        SELECT DISTINCT ?subject
+        WHERE {
+          GRAPH <{{target-graph}}> {
+            ?subject <{{selector.p}}> <{{selector.o}}> .
+          }
+        }
+        ORDER BY ?subject
+      }
+    }
+    LIMIT {{limit}}
+    OFFSET {{offset}}
+  }
+  GRAPH <{{target-graph}}> {
+    ?subject dbq:difficulty ?difficulty .
+    ?difficulty ?p1 ?o1 .
+    OPTIONAL {
+      ?o1 ?p2 ?o2 .
+    }
+  }
 }
