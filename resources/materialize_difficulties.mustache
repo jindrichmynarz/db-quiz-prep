@@ -21,8 +21,8 @@ INSERT {
 WHERE {
   {
     SELECT ?subject
-           (IF(?indegree > {{minimum-indegree}} && ?indegree < {{maximum-indegree}}, dbq:normal,
-            IF(?indegree > {{maximum-indegree}}, dbq:easy, dbq:hard)) AS ?difficulty)
+           (IF(?indegree > {{minimum-indegree}} && ?indegree < {{maximum-indegree}}, 1,
+            IF(?indegree > {{maximum-indegree}}, 0, 2)) AS ?difficulty)
     WHERE {
       {
         SELECT ?subject
