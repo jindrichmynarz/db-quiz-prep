@@ -1,7 +1,6 @@
 (ns db-quiz-prep.core
   (:gen-class)
-  (:require [db-quiz-prep.mustache :as mustache]
-            [db-quiz-prep.util :refer [join-lines]]
+  (:require [db-quiz-prep.util :refer [join-lines]]
             [db-quiz-prep.prepare :as prepare]
             [clojure.tools.cli :refer [parse-opts]]
             [clojure.edn :as edn]
@@ -20,7 +19,7 @@
                      :password s/Str
                      :page-size positive-number}
    :data {:selector {:p sc/URI
-                     :o sc/Str}
+                     :o s/Str}
           :surface-forms [sc/URI]
           :source-graph sc/URI
           :target-graph sc/URI}
