@@ -11,6 +11,8 @@
 
 (def ^:private positive-number (s/both s/Int (s/pred pos? 'pos?)))
 
+(def ^:private non-negative-number (s/both s/Int (s/pred (complement neg?) 'non-negative?)))
+
 (def ^:private degree (s/both positive-number (s/pred (partial >= 180) 'degree?)))
 
 (def ^:private Config
@@ -25,7 +27,7 @@
           :target-graph sc/URI}
    :split-angles {:easy degree
                   :normal degree}
-   (s/optional-key :start-from) positive-number})
+   (s/optional-key :start-from) non-negative-number})
 
 ; ----- Private functions -----
 
