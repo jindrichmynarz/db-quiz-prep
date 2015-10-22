@@ -20,7 +20,7 @@
                      :page-size positive-number}
    :data {:selector {:p sc/URI
                      :o s/Str}
-          :surface-forms [sc/URI]
+          :surface-forms [s/Str]
           :source-graph sc/URI
           :target-graph sc/URI}
    :split-angles {:easy degree
