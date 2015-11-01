@@ -4,90 +4,26 @@
             [clojure.edn :as edn]
             [stencil.core :refer [render-string]]))
 
-; ----- Private functions -----
-
-(def ^:private degrees->radians
-  "Convert angle in degrees to radians"
-  (partial * (/ Math/PI 180)))
-
-(defn- round
-  "Round a `number` to a given `precision` decimal places."
-  [precision number]
-  (let [rounding-factor (Math/pow 10 precision)]
-    (/ (Math/round (* number rounding-factor))
-       rounding-factor)))
-
-(def ^:private round-2
-  "Round to 2 decimal places"
-  (partial round 2))
-
-(defn- sign
-  "Tell the sign of the `number`."
-  [number]
-  (if (neg? number) - +))
-
 ; ----- Public functions -----
 
-(defn bisection
-  "Use bisection method to find the root of function `f` in the interval [a, b].
-  `tolerance` the maximum deviation from 0.
-  `nmax` is the maximum number of iteration of the bisection before it fails."
-  ([n f a b tolerance nmax]
-   (if (<= n nmax)
-     (let [c (/ (+ a b) 2)
-           fc (f c)]
-       (if (< (Math/abs (float (/ (- b a) 2))) tolerance)
-         c
-         (if (= (sign fc) (sign (f a)))
-           (recur (inc n) f c b tolerance nmax)
-           (recur (inc n) f a c tolerance nmax))))
-     (throw (Exception. "Bisection method failed"))))
-  ([f a b tolerance nmax]
-   (bisection 1 f a b tolerance nmax)))
-
-(defn estimate-b
-  "Estimates parameter b of an exponential function based on `indegree-histogram`."
-  [indegree-histogram b]
-  (letfn [(sum-map [f] (reduce + (map f indegree-histogram)))]
-    (- (* (sum-map (fn [[x _]] (* x (Math/exp (* 2 b x)))))
-          (/ (sum-map (fn [[x y]] (* y (Math/exp (* b x)))))
-             (sum-map (fn [[x _]] (Math/exp (* 2 b x))))))
-       (sum-map (fn [[x y]] (* y x (Math/exp (* b x))))))))
-
-(defn compute-a
-  "Computes parameter a of an exponential function with parameter `b`
-  based on `indegree-histogram`."
-  [indegree-histogram b]
-  (letfn [(sum-map [f] (reduce + (map f indegree-histogram)))]
-    (/ (sum-map (fn [[x y]] (* y (Math/exp (* b x)))))
-       (sum-map (fn [[x _]] (Math/exp (* 2 b x)))))))
-
-(defn get-indegree-limit
-  "Get limiting indegree for exponential function parameterized with `a` and `b` at `angle` in degrees."
-  [a b angle]
-  (round-2 (/ (Math/log (/ (Math/tan (degrees->radians angle))
-                           (* a b)))
-              b)))
-
-(defn get-indegree-histogram
-  "Compute indegree histogram based on the provided configuration.
-  Returns a collection of [frequency indegree]."
+(defn get-indegrees
+  "Get indegrees of resources"
   [config]
   (let [parse-int (fn [int-like] (Integer/parseInt int-like))
-        query (slurp (io/resource "indegree_histogram.mustache"))]
-    (map (fn [{:keys [frequency indegree]}]
-           (mapv parse-int [indegree frequency]))
+        query (slurp (io/resource "indegrees.mustache"))]
+    (map (comp parse-int :indegree)
          (sparql/execute-unlimited-select-query config query))))
 
 (defn materialize-difficulties
-  "Precompute difficulties of questions based on their indegree."
+  "Split difficulties by the thirds of the area under curve."
   [config]
-  (let [{{:keys [easy normal]} :split-angles} config
-        indegree-histogram (get-indegree-histogram config)
-        b (float (bisection (partial estimate-b indegree-histogram) -10 0 0.001 100))
-        a (float (compute-a indegree-histogram b))
-        maximum-indegree (get-indegree-limit a b easy)
-        minimum-indegree (get-indegree-limit a b normal)
+  (let [indegrees (get-indegrees config)
+        third (/ (reduce + indegrees) 3)
+        partitions (->> (map vector (reductions + indegrees) indegrees)
+                        (partition-by (comp #(quot % third) first))
+                        (map (partial map second)))
+        minimum-indegree (-> partitions (nth 2) first)
+        maximum-indegree (-> partitions first last)
         update-template (slurp (io/resource "materialize_difficulties.mustache"))]
     (sparql/execute-unlimited-update config
                                      update-template

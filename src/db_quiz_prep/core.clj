@@ -25,8 +25,6 @@
           :surface-forms [s/Str]
           :source-graph sc/URI
           :target-graph sc/URI}
-   :split-angles {:easy degree
-                  :normal degree}
    (s/optional-key :start-from) non-negative-number})
 
 ; ----- Private functions -----
