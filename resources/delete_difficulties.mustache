@@ -34,7 +34,8 @@ WHERE {
   }
   GRAPH <{{target-graph}}> {
     ?subject dbq:difficulty ?difficulty .
-    ?difficulty ?p1 ?o1 .
+    ?difficulty dbq:forSelector [ <{{selector.p}}> <{{selector.o}}> ] ;
+      ?p1 ?o1 .
     OPTIONAL {
       ?o1 ?p2 ?o2 .
     }
